@@ -105,7 +105,7 @@ function cPoint(c){try{const m=c.getWorldManifold(null);if(m&&m.points&&m.points
 function relSpeed(a,b){const va=a.body?a.body.getLinearVelocity():{x:0,y:0},vb=b.body?b.body.getLinearVelocity():{x:0,y:0};return hyp(va.x-vb.x,va.y-vb.y)}
 function preSolve(c){const a=EA(c),b=EB(c);if(!a||!b)return;
  for(const [g,o] of [[a,b],[b,a]]){
-  if(g.kind==='glass'&&o.kind!=='debris'&&!(g.mimeOnly&&o.type!=='mime')){const s=relSpeed(g,o);if(g.broken||s>(o.kind==='pete'?3.2:o.kind==='mime'||o.type==='mime'?1.5:g.brk)){c.setEnabled(false);if(!g.broken){g.broken=true;const v=o.body.getLinearVelocity();Q.push(()=>breakGlass(g,o,v))}}}
+  if(g.kind==='glass'&&o.kind!=='debris'&&!(g.mimeOnly&&o.type!=='mime')){const s=relSpeed(g,o);if(g.broken||s>(o.kind==='pete'?3.2:o.kind==='mime'||o.type==='mime'?1.5:g.brk)){c.setEnabled(false);if(!g.broken){g.broken=true;const v=o.body.getLinearVelocity();Q.push(()=>breakGlass(g,o,{x:v.x,y:v.y}))}}}
   if(g.kind==='water'){c.setEnabled(false)}
   if(g.kind==='npc'&&g.down&&o.kind==='pete'&&false)c.setEnabled(false);
  }}
@@ -206,5 +206,5 @@ function tryGrab(){if(!P)return false;if(P.grab.length){releaseGrab();return tru
  if(e.kind==='barrel'&&e.fuseBox&&e.fuse<0)e.fuse=2.6;
  SND.grab();pop(best.pt.x,best.pt.y-.4,'GRAB!','#7dffb0',.8);if(G&&G.grabbed)G.grabbed(e);return true}
 function releaseGrab(throwBoost){if(!P||!P.grab.length)return;const es=new Set();for(const g of P.grab){try{world.destroyJoint(g.j)}catch(e){}es.add(g.e)}P.grab=[];
- const v=peteVel();for(const e of es){if(e.alive&&e.body&&e.body.isDynamic()&&e.body.getMass()<200){const bx=throwBoost?throwBoost.x:0,by=throwBoost?throwBoost.y:0;const ev=e.body.getLinearVelocity();e.body.setLinearVelocity(V2(lerp(ev.x,v.x,.5)+bx,lerp(ev.y,v.y,.5)+by));e.thrown=1.5;if(e.float)e.float=false}}
+ const v=peteVel();for(const e of es){const as=G&&G.M.throwAssist?G.M.throwAssist(e):null;if(as&&e.alive&&e.body){e.body.setLinearVelocity(V2(as.x,as.y));e.thrown=2;e.float=false;SND.whoosh&&SND.whoosh();call('MIME TOSS!','','#fff',.9);continue}if(e.alive&&e.body&&e.body.isDynamic()&&e.body.getMass()<200){const bx=throwBoost?throwBoost.x:0,by=throwBoost?throwBoost.y:0;const ev=e.body.getLinearVelocity();e.body.setLinearVelocity(V2(lerp(ev.x,v.x,.5)+bx,lerp(ev.y,v.y,.5)+by));e.thrown=1.5;if(e.float)e.float=false}}
  SND.blip();if(G&&G.released)G.released([...es])}

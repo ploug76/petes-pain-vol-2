@@ -10,3 +10,5 @@ Spank the Monkey (-> Bonk the Raccoons), HORSE (match first object hit + beat sc
 - 08:58 setup: planck.min.js, gamepad.js, art.js heads (84px) copied. Next: write js/game.js
 - 09:40 first playable: js/core,phys,stages,modes,game,draw,ui all written; smoke test 0 errors portrait+landscape. Local git commit (not pushed yet; repo not created on GitHub yet).
   Next: full mode playtest script /workspace/pp2-work/qa.py, gamepad mock, tune, then create GH repo + Pages.
+- 09:46 (resumed after box interruption) GH repo created (public); WIP pushed to `wip` branch. Fixes since: HUD relayout, call sizing/suppression, fragile->pier + gentler dmg, mime throwAssist, 2 substeps for ragdoll, real unlock thresholds, high-flight zoom-out. tour.py: 0 errors both orientations, fps 60.5, mock gamepad OK.
+  Next: qa.py port/land + mime test, push main, enable Pages, cover gif, vault.json entry + arcade sw v92.

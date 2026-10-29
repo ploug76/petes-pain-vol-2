@@ -7,7 +7,7 @@ function drawBtn(b,style){const s=style||b.style||'main';const dn=b.down?2:0;ctx
  const col=b.dis?'#555':s==='main'?'#ffd23a':s==='alt'?'#3fb7ff':s==='pink'?'#ff5fa2':s==='green'?'#3ad17a':s==='ghost'?'rgba(10,15,40,.55)':s==='red'?'#ff5a4a':'#ffd23a';
  ctx.fillStyle='rgba(0,0,0,.35)';rr(b.x,b.y+4,b.w,b.h,Math.min(18,b.h/2));ctx.fill();ctx.fillStyle=col;rr(b.x,b.y+dn,b.w,b.h,Math.min(18,b.h/2));ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='rgba(10,10,30,.85)';ctx.stroke();
  if(s!=='ghost'){ctx.fillStyle='rgba(255,255,255,.35)';rr(b.x+6,b.y+dn+4,b.w-12,b.h*.3,Math.min(10,b.h/4));ctx.fill()}
- const fs=b.fs||clamp(b.h*.42,16,26);txt(b.label,b.x+b.w/2,b.y+b.h/2+dn+1,fs,s==='ghost'||s==='alt'||s==='pink'||s==='red'||s==='green'?'#fff':'#2a1600',s==='main'?false:undefined);
+ let fs=b.fs||clamp(b.h*.42,16,26);ctx.font='900 '+fs+'px '+FONT;const mw=ctx.measureText(b.label).width;if(mw>b.w-14)fs=Math.max(13,fs*(b.w-14)/mw);txt(b.label,b.x+b.w/2,b.y+b.h/2+dn+1,fs,s==='ghost'||s==='alt'||s==='pink'||s==='red'||s==='green'?'#fff':'#2a1600',s==='main'?false:undefined);
  if(b.sub)txt(b.sub,b.x+b.w/2,b.y+b.h-12+dn,14,'rgba(40,20,0,.8)','center',false,'700 ');ctx.restore()}
 function panel(x,y,w,h,col){ctx.fillStyle='rgba(0,0,0,.4)';rr(x,y+6,w,h,22);ctx.fill();ctx.fillStyle=col||'rgba(18,22,48,.93)';rr(x,y,w,h,22);ctx.fill();ctx.lineWidth=4;ctx.strokeStyle='#ffd23a';ctx.stroke()}
 function wrap(s,maxW,size,weight){ctx.font=(weight||'700 ')+size+'px '+FONT;const out=[];let line='';for(const w of s.split(' ')){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){out.push(line);line=w}else line=t}if(line)out.push(line);return out}
@@ -30,7 +30,7 @@ function uiTitle(){const s=Math.min(W/420,H/520,1.5);drawLogo(W/2,SAFE.t+Math.ma
 function soundBtns(x,y){drawBtn(btn('mute',x,y,48,48,save.mute?'🔇':'🔊',()=>{save.mute=!save.mute;SND.apply();persist()},{style:'ghost',fs:22}));drawBtn(btn('music',x+56,y,48,48,save.music?'🎵':'🎵̸',()=>{save.music=!save.music;SND.apply();persist()},{style:save.music?'ghost':'red',fs:22}))}
 function backBtn(cb){drawBtn(btn('back',SAFE.l+10,SAFE.t+10,96,48,'◀ BACK',cb||(()=>{state='title';G.uiState='title'}),{style:'ghost',fs:18}))}
 // ---------- mode select ----------
-function uiModes(){ctx.fillStyle='rgba(8,10,30,.55)';ctx.fillRect(0,0,W,H);backBtn();txt('PICK YOUR PAIN',W/2,SAFE.t+34,PORT?28:30,'#ffd23a');
+function uiModes(){ctx.fillStyle='rgba(8,10,30,.55)';ctx.fillRect(0,0,W,H);backBtn();txt('PICK YOUR PAIN',W/2+(PORT?50:0),SAFE.t+34,PORT?24:30,'#ffd23a');
  const cols=PORT?2:3,pad=12,top=SAFE.t+70,cw=(Math.min(W-SAFE.l-SAFE.r,980)-pad*(cols+1))/cols,rows=Math.ceil(MODE_ORDER.length/cols);const ch=clamp((H-top-SAFE.b-16)/rows-pad,74,150);const x0=(W-(cw*cols+pad*(cols-1)))/2;
  MODE_ORDER.forEach((id,i)=>{const M=MODES[id],c=i%cols,r=Math.floor(i/cols),x=x0+c*(cw+pad),y=top+r*(ch+pad);const b=btn('m_'+id,x,y,cw,ch,'',()=>{selMode=id;selStage=M.stage;selPlayers=id==='ouch'?2:1;selCpu=false;state='mode';G.uiState='mode'});
   ctx.fillStyle=b.down?'rgba(255,210,58,.35)':'rgba(20,26,60,.9)';rr(x,y,cw,ch,16);ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=id===selMode?'#ffd23a':'rgba(255,255,255,.25)';ctx.stroke();
@@ -50,16 +50,16 @@ function uiMode(){const M=MODES[selMode];ctx.fillStyle='rgba(8,10,30,.6)';ctx.fi
  const sb=Math.min(320,W-60);drawBtn(btn('go',W/2-sb/2,Math.min(H-SAFE.b-80,y+14),sb,64,'LET\'S GET HURT!',()=>startGame(selMode,selStage,{players:selPlayers,cpu:selCpu}),{style:'green',fs:24}))}
 function startGame(m,s,o){SND.unlock();newSession(m,MODES[m].stagePick?s:MODES[m].stage,o);G.cpu=!!(o&&o.cpu);G.players=(m==='ouch')?2:(o&&o.players)||1;newTrophiesSession=[];if(G.players>1&&m!=='bowl'&&!G.cpu)state='pass';else if(m==='bowl'&&G.players>1)state='pass'}
 // ---------- locker (outfits + trophies) ----------
-function uiLocker(){ctx.fillStyle='rgba(8,10,30,.7)';ctx.fillRect(0,0,W,H);backBtn();txt('OUTFITS & TROPHIES',W/2,SAFE.t+34,PORT?24:28,'#ffd23a');const tc=trophyCount();
+function uiLocker(){ctx.fillStyle='rgba(8,10,30,.7)';ctx.fillRect(0,0,W,H);backBtn();txt(PORT?'LOCKER':'OUTFITS & TROPHIES',W/2,SAFE.t+34,PORT?24:28,'#ffd23a');const tc=trophyCount();
  const pw=Math.min(W-24,900),px=W/2-pw/2;let y=SAFE.t+70;const cols=PORT?2:5,bw=(pw-(cols-1)*10)/cols,bh=54;
- OUTFITS.forEach(([id,name,need],i)=>{const c=i%cols,r=Math.floor(i/cols),x=px+c*(bw+10),yy=y+r*(bh+10);const un=tc>=need;drawBtn(btn('o_'+id,x,yy,bw,bh,un?name:'🔒 '+need+' 🏆',()=>{if(un){save.outfit=id;persist();SND.ding(2)}},{style:save.outfit===id?'main':'ghost',fs:16}))});
+ OUTFITS.forEach(([id,name,need],i)=>{const c=i%cols,r=Math.floor(i/cols),x=px+c*(bw+10),yy=y+r*(bh+10);const un=tc>=need;drawBtn(btn('o_'+id,x,yy,bw,bh,un?name:'🔒 '+name+' ('+need+'🏆)',()=>{if(un){save.outfit=id;persist();SND.ding(2)}},{style:save.outfit===id?'main':'ghost',fs:16}))});
  y+=Math.ceil(OUTFITS.length/cols)*(bh+10)+10;txt('TROPHIES '+tc+'/'+Object.keys(TROPHIES).length,W/2,y,20,'#9fe6ff');y+=20;
  const keys=Object.keys(TROPHIES),tcols=PORT?1:2,tw=(pw-(tcols-1)*10)/tcols,th=PORT?44:46;const maxRows=Math.floor((H-y-SAFE.b-10)/(th+6));const per=maxRows*tcols;const pages=Math.ceil(keys.length/per);uiScroll=clamp(uiScroll,0,pages-1);
  keys.slice(uiScroll*per,uiScroll*per+per).forEach((k,i)=>{const c=i%tcols,r=Math.floor(i/tcols),x=px+c*(tw+10),yy=y+r*(th+6);const got=save.trophies[k];ctx.fillStyle=got?'rgba(255,210,58,.22)':'rgba(255,255,255,.07)';rr(x,yy,tw,th,12);ctx.fill();
   txt((got?'🏆 ':'⬜ ')+TROPHIES[k][0],x+12,yy+th*.33,16,got?'#ffd23a':'#bbb','left',false);txt(TROPHIES[k][1],x+12,yy+th*.73,14,'#dde','left',false,'600 ')});
  if(pages>1){drawBtn(btn('pg',W-SAFE.r-110,SAFE.t+10,100,48,'MORE ▶',()=>{uiScroll=(uiScroll+1)%pages},{style:'alt',fs:18}))}}
 // ---------- help ----------
-function uiHelp(){ctx.fillStyle='rgba(8,10,30,.8)';ctx.fillRect(0,0,W,H);backBtn();txt('HOW TO HURT PETE',W/2,SAFE.t+34,PORT?24:28,'#ffd23a');
+function uiHelp(){ctx.fillStyle='rgba(8,10,30,.8)';ctx.fillRect(0,0,W,H);backBtn();txt('HOW TO HURT PETE',W/2+(PORT?50:0),SAFE.t+34,PORT?20:28,'#ffd23a');
  const pw=Math.min(W-28,820);const pages=[
  ['👆 TOUCH','Drag back anywhere and let go to fire the slingshot (the dots show the path). In the air, drag to steer. Tap GRAB near a glowing ring to grab ledges, poles, cars, crates or the mime; tap again to let go and throw. Hold POSE for a pose (the ⟳ button picks Super Pete, Cannonball, Heli-Kick or Starfish); hold it 2 seconds for a bonus multiplier. TOOT gives one gassy boost per launch. After Pete hits something, SWIPE to OOCH him (4 nudges, O-O-C-H, they refill if he keeps moving) and tap SUPER once per launch for a big shove.'],
  ['🎮 CONTROLLER','Left stick aims, right stick sets power, A fires. In the air: left stick steers, A or X grabs/lets go, hold LB or LT to pose, RB changes the pose, Y toots, D-pad ooches, B is the Super Ooch. Start pauses, Back watches the replay. Unplugging the controller pauses the game.'],
@@ -93,7 +93,7 @@ function drawHUD(){setScreen();const M=G.M;const t=SAFE.t+10,l=SAFE.l+10;
  hudButtons()}
 function drawCalls(dt){setScreen();let y=H*(PORT?.27:.24);const base=Math.min(34,H*.075,W*.08);for(const c of CALL){c.age+=dt;const a=c.age<.12?c.age/.12:c.age>c.life-.3?(c.life-c.age)/.3:1;const sc=c.size*(1+Math.max(0,.18-c.age)*2.2)*(PORT?.9:1);ctx.globalAlpha=clamp(a,0,1);ctx.save();ctx.translate(W/2,y);ctx.rotate(Math.sin(c.age*20)*.02);const fs=Math.min(base*sc,W/c.text.length*1.45);txt(c.text,0,0,fs,c.col);if(c.sub)txt(c.sub,0,fs*.85,16,'#fff');ctx.restore();ctx.globalAlpha=1;y+=fs+(c.sub?24:10)}
  for(let i=CALL.length-1;i>=0;i--)if(CALL[i].age>CALL[i].life)CALL.splice(i,1)}
-function drawTrophyToast(dt){if(!trophyQ.length)return;const q=trophyQ[0];q.t+=dt;if(q.t>2.6){trophyQ.shift();newTrophiesSession.push(q.k);return}const a=q.t<.3?q.t/.3:q.t>2.2?(2.6-q.t)/.4:1;setScreen();const w=Math.min(W-30,360),x=W/2-w/2,y=H-SAFE.b-130-(1-a)*40;ctx.globalAlpha=a;panel(x,y,w,62,'rgba(40,30,0,.93)');txt('🏆 '+TROPHIES[q.k][0],W/2,y+22,19,'#ffd23a');txt(TROPHIES[q.k][1],W/2,y+46,14,'#fff','center',false,'600 ');ctx.globalAlpha=1}
+function drawTrophyToast(dt){if(!trophyQ.length)return;const q=trophyQ[0];q.t+=dt;if(q.t>2.6){trophyQ.shift();newTrophiesSession.push(q.k);return}const a=q.t<.3?q.t/.3:q.t>2.2?(2.6-q.t)/.4:1;setScreen();const w=Math.min(W-30,360),x=W/2-w/2,y=SAFE.t+74-(1-a)*40;ctx.globalAlpha=a;panel(x,y,w,62,'rgba(40,30,0,.93)');txt('🏆 '+TROPHIES[q.k][0],W/2,y+22,19,'#ffd23a');txt(TROPHIES[q.k][1],W/2,y+46,14,'#fff','center',false,'600 ');ctx.globalAlpha=1}
 // ---------- tally / pass / result / pause ----------
 function uiTally(){const M=G.M;const pw=Math.min(W-30,380),ph=PORT?250:230,px=W/2-pw/2,py=PORT?H*.36:Math.max(SAFE.t+70,H/2-ph/2);const a=Math.min(1,G.tallyT*4);ctx.globalAlpha=a;panel(px,py,pw,ph);let y=py+34;
  let head='LAUNCH SCORE',big=fmt(G.lastPts),sub='';
@@ -102,6 +102,7 @@ function uiTally(){const M=G.M;const pw=Math.min(W-30,380),ph=PORT?250:230,px=W/
  else if(G.modeId==='fragile'){head=G.dmsg;big=fmt(G.lastPts);sub='wrap damage '+Math.round(G.dmg)+'%'}
  else if(G.modeId==='ouch'){head=(G.cur===0?'PLAYER 1':(G.cpu?'CPU':'PLAYER 2'))+': '+fmt(G.lastPts);big='';sub=G.msg}
  else if(G.modeId==='kaboom'&&G.lastBonus){sub='incl. chain bonus +'+fmt(G.lastBonus)}
+ else if(G.modeId==='pain'){const t=G.stats;sub=[t.crunch?t.crunch+' crunches':'',t.grabs?t.grabs+' grabs':'',t.bounces?t.bounces+' bounces':'',t.ooch?t.ooch+' ooches':'',t.blasts?t.blasts+' blasts':''].filter(Boolean).join(' · ')||'Try grabbing, posing and ooching!'}
  else if(G.modeId==='mime'){sub=G.mBroke+'/5 windows · '+G.mt.toFixed(1)+'s'}
  else if(G.modeId==='raccoon'){sub='raccoons '+G.rc+'/'+G.rcs.length+(G.rc>=G.rcs.length?' · wave cleared!':' · not all of them')}
  else if(G.modeId==='target'){sub=G.tg.filter(t=>t.hit).length+'/12 targets'}
@@ -117,6 +118,7 @@ function uiResult(){ctx.fillStyle='rgba(8,10,30,.7)';ctx.fillRect(0,0,W,H);const
  else if(G.modeId==='bowl'){const a=bowlScore(G.rolls[0],G.frames),b=bowlScore(G.rolls[1],G.frames);if(G.players>1){txt(G.winner===0?'PLAYER 1 WINS!':G.winner===1?'PLAYER 2 WINS!':'TIE!',W/2,y,30,'#fff');y+=38;txt('P1 '+a.total+'  ·  P2 '+b.total,W/2,y,24,'#ffd23a');y+=30}else{txt(a.total+' / 150',W/2,y,44,'#fff');y+=40;txt(a.frames.map(f=>f==null?'-':f).join('  '),W/2,y,17,'#9fe6ff','center',false,'700 ');y+=24}}
  else{const v=M.unit?G.final+' '+M.unit:fmt(G.final);txt(v,W/2,y,44,'#fff');y+=40;if(G.scores.length&&G.modeId!=='bounce')txt(G.scores.map(s=>fmt(s)).join(' · '),W/2,y,15,'#9fe6ff','center',false,'700 ');else if(G.modeId==='bounce')txt(G.scores.map(s=>s.toFixed(1)+'m').join(' · '),W/2,y,15,'#9fe6ff','center',false,'700 ');y+=26}
  if(G.newBest&&G.modeId!=='ouch'){txt('★ NEW BEST! ★',W/2,y,24,'#ffd23a');y+=32}
+ if(G.unlockedNow&&G.unlockedNow.length){txt('🔓 New stage: '+G.unlockedNow.map(s=>STAGES[s].name).join(', '),W/2,y,16,'#7dffb0','center',false,'800 ');y+=26}
  const nt=newTrophiesSession.concat(trophyQ.map(q=>q.k));if(nt.length){txt('Trophies: '+nt.map(k=>TROPHIES[k][0]).join(', '),W/2,y,15,'#ffcf7a','center',false,'700 ');y+=24}
  const bw=pw-40,bh=52;let by=py+ph-3*(bh+10)-6;drawBtn(btn('again',px+20,by,bw,bh,'PLAY AGAIN',()=>startGame(G.modeId,G.stageId,{players:G.players,cpu:G.cpu}),{style:'green'}));by+=bh+10;
  drawBtn(btn('modes',px+20,by,bw,bh,'OTHER MODES',()=>{startTitle();state='modes';G.uiState='modes'},{style:'alt'}));by+=bh+10;drawBtn(btn('menu',px+20,by,bw,bh,'MAIN MENU',()=>startTitle(),{style:'ghost'}))}
@@ -131,7 +133,7 @@ function frame(now){requestAnimationFrame(frame);const rdt=Math.min(.05,((now-(l
  if(run&&world){acc+=sdt;let n=0;while(acc>=1/60&&n<(window.__SPEED>1?12:4)){physStep(1/60);acc-=1/60;n++}if(n>=4)acc=0}
  if(G&&G.cpu&&G.cur===1&&state==='aim'&&G.cpuT>0){G.cpuT-=rdt;if(G.cpuT<=0)launch()}
  if(state==='tally')G.tallyT+=rdt;if(state==='replay')replayStep(rdt);
- demoStep(sdt);camStep(rdt);
+ demoStep(sdt);camStep(rdt*Math.min(3,window.__SPEED||1));
  shake=Math.max(0,shake-rdt*2.2);punch=Math.max(0,punch-rdt*3);flash=Math.max(0,flash-rdt*2.5);const sm=Math.min(W,H)*.03*shake;SHX=rnd(-1,1)*sm;SHY=rnd(-1,1)*sm;
  if(G&&G.stage)drawWorld();
  setScreen();
@@ -140,7 +142,7 @@ function frame(now){requestAnimationFrame(frame);const rdt=Math.min(.05,((now-(l
  if(state==='replay'){ctx.fillStyle='#000';ctx.fillRect(0,0,W,H*.08);ctx.fillRect(0,H*.92,W,H*.08);if(Math.floor(frameT*2)%2)txt('● REPLAY',SAFE.l+70,H*.04+SAFE.t*.5,20,'#ff4040','center',false);txt('slow-mo · tap to skip',W/2,H*.96-SAFE.b*.3,16,'#fff','center',false,'700 ')}
  if(state==='title')uiTitle();else if(state==='modes')uiModes();else if(state==='mode')uiMode();else if(state==='locker')uiLocker();else if(state==='help')uiHelp();
  else if(G&&!G.demo&&state!=='replay'){if(state!=='pass')drawHUD();if(state==='tally')uiTally();if(state==='pass')uiPass();if(state==='result')uiResult();if(state==='pause')uiPause()}
- drawCalls(rdt);drawTrophyToast(rdt);
+ if(!(G&&G.demo)&&state!=='result'&&state!=='pass'&&state!=='pause')drawCalls(rdt);else if(G&&G.demo)CALL.length=0;drawTrophyToast(rdt);
  }catch(e){console.error(e);(window.__ERR=window.__ERR||[]).push(String(e&&e.stack||e))}}
 window.onLayout=function(){BG=null};
 // ---------- controller ----------

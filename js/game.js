@@ -31,12 +31,12 @@ function launch(){if((state!=='aim'&&!G.demo)||G.phase!=='aim'||G.aim.pow<.08)re
  burst('dust',G.stage.sling.x,G.stage.sling.y,8,3,{life:.5,size:.3,g:0,col:'rgba(255,255,255,.7)'});if(G.M.launched)G.M.launched(G)}
 // ---------- scoring ----------
 function addPts(pts,label,col,x,y){if(!G)return;const m=G.combo*P.poseMult;const v=Math.round(pts*m);G.launchPts+=v;if(label){if(x!==undefined)pop(x,y,label+' +'+fmt(v),col,1);else call(label,'+'+fmt(v),col)}}
-function painHit(i,dv,other){const t=G.t;if(t-G.comboT<1.5)G.chain++;else G.chain=1;G.comboT=t;const prev=G.combo;G.combo=Math.min(5,1+Math.floor(G.chain/3)*.5);if(G.combo>prev&&G.combo>=2){call('COMBO x'+G.combo,'','#ff6bd6',.8);SND.ding(G.combo*2)}
+function painHit(i,dv,other){const t=G.t;if(t-G.comboT<1.5)G.chain++;else G.chain=1;G.comboT=t;const prev=G.combo;G.combo=Math.min(5,1+Math.floor(G.chain/3)*.5);if(Math.floor(G.combo)>Math.floor(prev)&&G.combo>=2){call('COMBO x'+G.combo,'','#ff6bd6',.8);SND.ding(G.combo*2)}
  const pts=(dv-2.2)*15*PARTMULT[i];const e=P.parts[i];
  if(i===2){save.stats.heads++;P.dizzy=Math.max(P.dizzy,dv>9?2.5:1)}
  P.faceT=.8;const big=dv>13,mid=dv>7.5;
  if(big){const b=pick(BONES[i]);addPts(pts,null);call(b+(i===0&&b==='RIGHT IN THE PRIDE'?'!':' CRUNCH!'),'+'+fmt(pts*G.combo*P.poseMult),'#ff5a4a',1.25);SND.crunch(1);SND.voice(1);SND.crowd(.8);slowmo(.32,.3);addShake(.5);punch=.6;burst('star',e.x,e.y,10,5,{life:.7,size:.22,g:0,col:'#fff59a'});G.stats.crunch=(G.stats.crunch||0)+1;if(G.stats.crunch>=5)trophy('crunch')}
- else if(mid){addPts(pts,pick(SMALL),'#ffd23a',e.x,e.y-.5);SND.thud(.8);SND.voice(.4);addShake(.22);burst('star',e.x,e.y,5,3,{life:.5,size:.16,g:0,col:'#fff59a'})}
+ else if(mid&&G.t-(G.lastPop||0)>.25){G.lastPop=G.t;addPts(pts,pick(SMALL),'#ffd23a',e.x,e.y-.5);SND.thud(.8);SND.voice(.4);addShake(.22);burst('star',e.x,e.y,5,3,{life:.5,size:.16,g:0,col:'#fff59a'})}
  else{addPts(pts,null);SND.thud(clamp(dv/10,.15,.6));if(dv>4)burst('dust',e.x,e.y+.1,3,1.5,{life:.4,size:.2,g:0,col:'rgba(230,220,200,.6)'})}
  if(G.M.pain)G.M.pain(i,dv,other)}
 function processHits(dt){if(!P)return;for(let i=0;i<11;i++){P.cool[i]-=dt;const I=P.hitAcc[i];if(I>0){const dv=I/P.bodies[i].getMass();if(dv>2.2&&P.cool[i]<=0&&flying()){painHit(i,dv,P.hitOther[i]);P.cool[i]=.14}P.hitAcc[i]=0}}}
@@ -112,7 +112,7 @@ function keyDir(code){let x=0,y=0;const k=Object.assign({},keys);if(code)k[code]
 function pauseGame(){if(state==='pause')return;prevState=state;state='pause';SND.blip()}
 function resumeGame(){if(state!=='pause')return;state=prevState}
 // ---------- per-frame game step ----------
-function physStep(dt){if(!world)return;controlStep(dt);world.step(dt,8,3);
+function physStep(dt){if(!world)return;controlStep(dt);world.step(dt/2,8,5);world.step(dt/2,8,5);
  while(Q.length){const f=Q.shift();try{f()}catch(e){console.warn(e)}}
  physUpkeep(dt);syncAll();processHits(dt);if(P&&P.padCd>0)P.padCd-=dt;
  if(G){G.t+=dt;if(flying())flyStep(dt)}
@@ -142,8 +142,8 @@ function finishMode(){const M=G.M;G.final=M.final?M.final(G):G.total;const key=G
  if(M.best!==false&&G.final>(save.best[key]||0)&&(!M.lowBetter)){save.best[key]=G.final;G.newBest=true}
  if(M.lowBetter&&G.final>0&&(!save.best[key]||G.final<save.best[key])){save.best[key]=G.final;G.newBest=true}
  checkUnlocks();persist();state='result';if(G.newBest)SND.cheer()}
-function checkUnlocks(){for(let i=1;i<STAGE_ORDER.length;i++){const id=STAGE_ORDER[i];if(!save.best['unl:'+id]&&stageUnlocked(id)){save.best['unl:'+id]=1;if(id==='vegas')trophy('vegas');call('NEW STAGE!',STAGES[id].name,'#7dffb0',1.2)}}}
-const UNLOCK_AT=6000;
+function checkUnlocks(){G.unlockedNow=[];for(let i=1;i<STAGE_ORDER.length;i++){const id=STAGE_ORDER[i];if(!save.best['unl:'+id]&&(save.best['pain:'+STAGE_ORDER[i-1]]||0)>=UNLOCK_AT){save.best['unl:'+id]=1;if(id==='vegas')trophy('vegas');G.unlockedNow.push(id)}}}
+const UNLOCK_AT=20000;
 function stageUnlocked(id){const i=STAGE_ORDER.indexOf(id);if(i<=0)return true;if(QA&&QA.unlockAll)return true;const prev=STAGE_ORDER[i-1];return (save.best['pain:'+prev]||0)>=UNLOCK_AT||!!save.best['unl:'+id]}
 // ---------- replay ----------
 const RKINDS=new Set(['pete','crate','barrel','glass','sign','car','wheel','npc','raccoon','pin','donut','wball','gondola','debris','girder','porta','dice','target']);
@@ -156,7 +156,7 @@ function endReplay(){if(!G.replay)return;for(const [e,x,y,a] of G.replay.saved){
 // ---------- camera ----------
 function camStep(dt){const bz=baseZoom();const S=G&&G.demo?(G.phase==='fly'?'fly':'aim'):state;let tx=cam.tx,ty=cam.ty,tz=cam.tz;
  if((S==='fly'||S==='replay'||S==='tally')&&P){const rp=S!=='fly';const c=rp?{x:(P.parts[0].x+P.parts[1].x)/2,y:(P.parts[0].y+P.parts[1].y)/2}:peteCenter();const v=rp?{x:0,y:0}:peteVel(),sp=hyp(v.x,v.y);
-  tz=bz*clamp(1.25-sp/60,.84,1.25)*(S==='replay'?1.2:1);const vw=W/tz,vh=H/tz;tx=c.x+clamp(v.x*.3,-vw*.22,vw*.22);ty=Math.min(c.y+clamp(v.y*.2,-vh*.2,vh*.2),-vh*(PORT?.36:.33))}
+  tz=bz*clamp(1.25-sp/60,.84,1.25)*(S==='replay'?1.2:1);let hi=false;if(S==='fly'){const need=(-c.y)*1.25+5;if(H/need<tz){tz=Math.max(bz*.5,H/need);hi=true}}const vw=W/tz,vh=H/tz;tx=c.x+clamp(v.x*.3,-vw*.22,vw*.22);const gl=-vh*(PORT?.36:.33);ty=hi?Math.min(gl,c.y+.38*vh):Math.min(c.y+clamp(v.y*.2,-vh*.2,vh*.2),gl)}
  else if(S==='aim'&&G){tz=bz*.92;const vw=W/tz,vh=H/tz;tx=G.stage.sling.x+vw*.3;ty=Math.min(G.stage.sling.y+vh*.06,-vh*(PORT?.36:.33))}
  const k=1-Math.exp(-dt*(S==='fly'?5:3));cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;cam.z+=(tz-cam.z)*(1-Math.exp(-dt*2.2));
  const vw=W/cam.z;if(G&&G.stage){cam.x=clamp(cam.x,G.stage.x0+vw*.5,Math.max(G.stage.x0+vw*.5,G.stage.x1+8-vw*.5))}}

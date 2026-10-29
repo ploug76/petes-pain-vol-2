@@ -52,7 +52,7 @@ function drawGround(st){const x0=cam.x-W/cam.z,x1=cam.x+W/cam.z;ctx.fillStyle=st
  if(st.id==='city'||st.id==='vegas'){ctx.fillStyle=st.night?'#ffd84a':'#f4f4f4';for(let x=Math.floor(x0/4)*4;x<x1;x+=4)ctx.fillRect(x,1.1,2,.14)}
  if(st.id==='pier'){ctx.fillStyle='#b98654';ctx.fillRect(x0,0,x1-x0,.5);ctx.fillStyle='rgba(0,0,0,.18)';for(let x=Math.floor(x0);x<x1;x+=1)ctx.fillRect(x,0,.05,.5);ctx.fillStyle='#2b8fc7';ctx.fillRect(x0,.5,x1-x0,60)}
  if(st.id==='lane'){ctx.fillStyle='#d9a55d';ctx.fillRect(4,-.0,st.x1-14,.35);ctx.fillStyle='rgba(120,70,20,.25)';for(let x=4;x<st.x1-10;x+=.9)ctx.fillRect(x,0,.04,.35);ctx.fillStyle='#c0392b';for(let i=0;i<7;i++){const x=20+i*1.4;ctx.beginPath();ctx.moveTo(x,.1);ctx.lineTo(x+.35,.3);ctx.lineTo(x-.35,.3);ctx.fill()}}
- for(const s of SCORCH){ctx.fillStyle='rgba(20,15,10,.35)';ctx.beginPath();ctx.ellipse(s.x,s.y>-.5?.05:s.y,s.r,.25,0,0,TAU);ctx.fill()}}
+ for(const s of SCORCH){if(s.y<-.7)continue;ctx.fillStyle='rgba(20,15,10,.35)';ctx.beginPath();ctx.ellipse(s.x,s.y>-.5?.05:s.y,s.r,.25,0,0,TAU);ctx.fill()}}
 function body2(e,fn){ctx.save();ctx.translate(e.x,e.y);ctx.rotate(e.a);fn();ctx.restore()}
 function drawEnt(e,st){if(!e.alive||e.rHide)return;const k=e.kind;switch(k){
  case 'ground':case 'water':case 'ferris':return;
@@ -194,7 +194,7 @@ function drawSling(front){if(!G)return;const s=G.stage.sling;const pp=state==='a
   ctx.strokeStyle='#7a1f1f';ctx.lineWidth=.12;ctx.beginPath();ctx.moveTo(L.x,L.y);ctx.lineTo(pp.x,pp.y);ctx.stroke()}
  else{ctx.strokeStyle='#a32626';ctx.lineWidth=.13;ctx.beginPath();ctx.moveTo(R.x,R.y);ctx.lineTo(pp.x,pp.y);ctx.stroke();if(state==='aim'){ctx.fillStyle='#4a2a14';ctx.beginPath();ctx.ellipse(pp.x,pp.y,.25,.4,G.aim.ang,0,TAU);ctx.fill()}}}
 function drawTraj(){if(state!=='aim'||G.cpuT>0)return;const v=aimVel(),p=pouch();let x=p.x,y=p.y,vx=v.x,vy=v.y;const dt=.06;ctx.fillStyle='rgba(255,255,255,.9)';for(let i=0;i<26;i++){vy+=GRAV*dt;x+=vx*dt;y+=vy*dt;if(y>0)break;if(i%2===0){ctx.globalAlpha=1-i/28;ctx.beginPath();ctx.arc(x,y,.13,0,TAU);ctx.fill()}}ctx.globalAlpha=1}
-function drawGrabHint(){if(state!=='fly'||!P||G.M.noGrab)return;if(P.grab.length){for(const g of P.grab){const a=g.j.getAnchorA(),b=g.j.getAnchorB();ctx.strokeStyle='rgba(125,255,176,.7)';ctx.lineWidth=.06;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}return}
+function drawGrabHint(){if(state!=='fly'||!P||G.M.noGrab)return;if(P.grab.length){const ge=P.grab[0].e;if(G.M.throwAssist){const as=G.M.throwAssist(ge);if(as){ctx.strokeStyle='rgba(255,230,120,.85)';ctx.lineWidth=.08;ctx.setLineDash([.3,.25]);ctx.beginPath();ctx.moveTo(ge.x,ge.y);ctx.lineTo(as.target.x,as.target.y);ctx.stroke();ctx.setLineDash([]);wtxt('LET GO TO THROW!',ge.x,ge.y-1.4,.3,'#ffe066')}}for(const g of P.grab){const a=g.j.getAnchorA(),b=g.j.getAnchorB();ctx.strokeStyle='rgba(125,255,176,.7)';ctx.lineWidth=.06;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}return}
  let best=null;for(const hi of [PI.larmF,PI.larmB]){const c=nearestGrab(P.parts[hi],1.5);if(c&&(!best||c.d<best.d))best=c}G.grabNear=!!best;if(!best)return;const pul=1+Math.sin(frameT*14)*.15;ctx.strokeStyle='#7dffb0';ctx.lineWidth=.08;ctx.beginPath();ctx.arc(best.pt.x,best.pt.y,.45*pul,0,TAU);ctx.stroke();wtxt('GRAB!',best.pt.x,best.pt.y-.8,.32,'#7dffb0')}
 // ---------- effects ----------
 function drawFx(){for(const f of FX){const a=1-f.age/f.life;switch(f.t){
