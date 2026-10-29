@@ -2,7 +2,7 @@
 'use strict';
 const PLAY={aim:1,fly:1};
 let uiScroll=0,selMode='pain',selStage='city',selPlayers=1,selCpu=false,lastNow=0,acc=0,screenT=0,newTrophiesSession=[];
-function btn(id,x,y,w,h,label,cb,o){const b=Object.assign({id,x,y,w,h,label,cb},o||{});menuBtns.push(b);return b}
+function btn(id,x,y,w,h,label,cb,o){const b=Object.assign({id,x,y,w,h,label,cb},o||{});if(ptr.down&&ptr.btn&&ptr.btn.id===id){b.down=true;ptr.btn=b}menuBtns.push(b);return b}
 function drawBtn(b,style){const s=style||b.style||'main';const dn=b.down?2:0;ctx.save();
  const col=b.dis?'#555':s==='main'?'#ffd23a':s==='alt'?'#3fb7ff':s==='pink'?'#ff5fa2':s==='green'?'#3ad17a':s==='ghost'?'rgba(10,15,40,.55)':s==='red'?'#ff5a4a':'#ffd23a';
  ctx.fillStyle='rgba(0,0,0,.35)';rr(b.x,b.y+4,b.w,b.h,Math.min(18,b.h/2));ctx.fill();ctx.fillStyle=col;rr(b.x,b.y+dn,b.w,b.h,Math.min(18,b.h/2));ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='rgba(10,10,30,.85)';ctx.stroke();
@@ -142,9 +142,24 @@ function frame(now){requestAnimationFrame(frame);const rdt=Math.min(.05,((now-(l
  if(state==='replay'){ctx.fillStyle='#000';ctx.fillRect(0,0,W,H*.08);ctx.fillRect(0,H*.92,W,H*.08);if(Math.floor(frameT*2)%2)txt('● REPLAY',SAFE.l+70,H*.04+SAFE.t*.5,20,'#ff4040','center',false);txt('slow-mo · tap to skip',W/2,H*.96-SAFE.b*.3,16,'#fff','center',false,'700 ')}
  if(state==='title')uiTitle();else if(state==='modes')uiModes();else if(state==='mode')uiMode();else if(state==='locker')uiLocker();else if(state==='help')uiHelp();
  else if(G&&!G.demo&&state!=='replay'){if(state!=='pass')drawHUD();if(state==='tally')uiTally();if(state==='pass')uiPass();if(state==='result')uiResult();if(state==='pause')uiPause()}
- if(!(G&&G.demo)&&state!=='result'&&state!=='pass'&&state!=='pause')drawCalls(rdt);else if(G&&G.demo)CALL.length=0;drawTrophyToast(rdt);
+ if(!(G&&G.demo)&&state!=='result'&&state!=='pass'&&state!=='pause')drawCalls(rdt);else if(G&&G.demo)CALL.length=0;drawTrophyToast(rdt);drawKbFocus();
  }catch(e){console.error(e);(window.__ERR=window.__ERR||[]).push(String(e&&e.stack||e))}}
 window.onLayout=function(){BG=null};
+// ---------- keyboard menu navigation (arrows/Tab move, Enter/Space select, Esc back) ----------
+let kbFocus=null,kbT=-9;const PRI=['play','go','ready','again','next','resume'];
+function kbDefault(L){return PRI.map(i=>L.find(b=>b.id===i)).find(Boolean)||L.find(b=>!/^(back|menu|mute|music|pause)$/.test(b.id))||L[0]}
+function kbList(){return menuBtns.filter(b=>!b.dis&&b.cb)}
+function drawKbFocus(){if(!kbFocus||frameT-kbT>8||PLAY[state])return;const b=menuBtns.find(q=>q.id===kbFocus);if(!b)return;setScreen();ctx.save();ctx.lineWidth=4;ctx.strokeStyle='#fff';ctx.shadowColor='#ffd23a';ctx.shadowBlur=12;rr(b.x-5,b.y-5,b.w+10,b.h+10,14);ctx.stroke();ctx.restore()}
+function kbNav(code,e){const L=kbList();if(!L.length)return false;let cur=L.find(b=>b.id===kbFocus);
+ if(code==='Enter'||code==='Space'||code==='NumpadEnter'){if(cur&&frameT-kbT<=8){SND.blip();cur.cb();kbT=frameT;return true}const pri=PRI.map(i=>L.find(b=>b.id===i)).find(Boolean);if(pri){SND.blip();pri.cb();return true}kbFocus=kbDefault(L).id;kbT=frameT;return true}
+ const dir={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1],KeyA:[-1,0],KeyD:[1,0],KeyW:[0,-1],KeyS:[0,1]}[code];
+ if(code==='Tab'){const i=cur?L.indexOf(cur):-1;const n=L[(i+(e&&e.shiftKey?-1:1)+L.length)%L.length];kbFocus=n.id;kbT=frameT;return true}
+ if(dir){if(!cur||frameT-kbT>8){kbFocus=kbDefault(L).id;kbT=frameT;return true}const cx=cur.x+cur.w/2,cy=cur.y+cur.h/2;let best=null,bd=1e9;
+  for(const b of L){if(b===cur)continue;const dx=b.x+b.w/2-cx,dy=b.y+b.h/2-cy;const along=dx*dir[0]+dy*dir[1];if(along<=4)continue;const perp=Math.abs(dx*dir[1]-dy*dir[0]);const d=along+perp*2;if(d<bd){bd=d;best=b}}
+  if(best){kbFocus=best.id;kbT=frameT;SND.blip()}return true}
+ if(code==='Escape'||code==='Backspace'){const b=menuBtns.find(q=>q.id==='back'||q.id==='menu');if(b){b.cb();return true}if(state==='modes'||state==='locker'||state==='help'){state='title';G.uiState='title';return true}}
+ return false}
+{const _ok=window.onKey;window.onKey=function(code,down,e){if(_ok(code,down,e))return true;if(!down)return false;if(PLAY[state]||state==='tally'||state==='replay')return false;return kbNav(code,e)}}
 // ---------- controller ----------
 function initPad(){if(!window.GamepadSupport)return;let dpPrev={},stickPrev=0;
  GamepadSupport.init({
@@ -155,7 +170,7 @@ function initPad(){if(!window.GamepadSupport)return;let dpPrev={},stickPrev=0;
    start:function(p){if(!p)return;if(PLAY[state])pauseGame();else if(state==='pause')resumeGame()},back:function(p){if(p&&state==='tally')startReplay()}},
   noRepeat:['a','b','x','y','start','back','rb'],repeat:false,
   menu:function(){return !PLAY[state]&&state!=='replay'},
-  items:GamepadSupport.list(function(){return menuBtns.filter(b=>!b.dis&&b.id!=='pose'&&b.id!=='cyc')},{scale:1}),
+  items:GamepadSupport.list(function(){const L=menuBtns.filter(b=>!b.dis&&b.id!=='pose'&&b.id!=='cyc');const pr=L.filter(b=>PRI.includes(b.id));return pr.concat(L.filter(b=>!PRI.includes(b.id)))},{scale:1}),
   isPaused:function(){return state==='pause'},
   pause:function(){if(PLAY[state])pauseGame()},
   back:function(){if(state==='pause'){resumeGame();return true}const b=menuBtns.find(q=>q.id==='back'||q.id==='menu');if(b){b.cb();return true}if(state==='modes'||state==='locker'||state==='help'){state='title';G.uiState='title';return true}return true},

@@ -85,17 +85,17 @@ const SND=(()=>{let ac=null,master,sfx,mus,noise,comp,windG=null,windF=null;cons
 const keys={};let menuBtns=[];
 const ptr={down:false,id:-1,x:0,y:0,sx:0,sy:0,t0:0,lx:0,ly:0,lt:0,btn:null,moved:0};
 function hitBtn(x,y){for(let i=menuBtns.length-1;i>=0;i--){const b=menuBtns[i];if(!b.dis&&x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h)return b}return null}
-cv.addEventListener('pointerdown',e=>{SND.unlock();e.preventDefault();if(ptr.down&&e.pointerId!==ptr.id){// second finger: treat as tap on buttons only
+cv.addEventListener('pointerdown',e=>{try{SND.unlock()}catch(_){}e.preventDefault();if(ptr.down&&e.pointerId!==ptr.id){// second finger: treat as tap on buttons only
   const b=hitBtn(e.clientX,e.clientY);if(b){b.press&&b.press(true);if(b.cb&&!b.hold)b.cb()}return}
  Object.assign(ptr,{down:true,id:e.pointerId,x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,lx:e.clientX,ly:e.clientY,t0:performance.now(),lt:performance.now(),moved:0});
  ptr.btn=hitBtn(e.clientX,e.clientY);if(ptr.btn){ptr.btn.down=true;if(ptr.btn.press)ptr.btn.press(true);if(ptr.btn.instant&&ptr.btn.cb)ptr.btn.cb();return}
  try{cv.setPointerCapture(e.pointerId)}catch(_){}if(window.onPtr)onPtr('down',ptr)},{passive:false});
 cv.addEventListener('pointermove',e=>{if(!ptr.down||e.pointerId!==ptr.id)return;ptr.lx=ptr.x;ptr.ly=ptr.y;ptr.x=e.clientX;ptr.y=e.clientY;ptr.moved=Math.max(ptr.moved,hyp(ptr.x-ptr.sx,ptr.y-ptr.sy));if(!ptr.btn&&window.onPtr)onPtr('move',ptr);ptr.lt=performance.now()},{passive:false});
 function ptrUp(e){if(e.pointerId!==ptr.id){const b=hitBtn(e.clientX,e.clientY);if(b&&b.press)b.press(false);return}if(!ptr.down)return;ptr.down=false;ptr.x=e.clientX;ptr.y=e.clientY;
- if(ptr.btn){const b=ptr.btn;b.down=false;ptr.btn=null;if(b.press)b.press(false);if(!b.instant&&b.cb&&hitBtn(e.clientX,e.clientY)===b){SND.blip();b.cb()}return}
+ if(ptr.btn){const b=ptr.btn;b.down=false;ptr.btn=null;if(b.press)b.press(false);const h=hitBtn(e.clientX,e.clientY);if(!b.instant&&e.type!=='pointercancel'&&h&&h.id===b.id&&h.cb){SND.blip();h.cb()}return}
  if(window.onPtr)onPtr(e.type==='pointercancel'?'cancel':'up',ptr)}
 cv.addEventListener('pointerup',ptrUp);cv.addEventListener('pointercancel',ptrUp);
-addEventListener('keydown',e=>{SND.unlock();if(e.repeat&&keys[e.code])return;keys[e.code]=true;if(window.onKey&&onKey(e.code,true,e))e.preventDefault()});
+addEventListener('keydown',e=>{try{SND.unlock()}catch(_){}if(e.repeat&&keys[e.code])return;keys[e.code]=true;if(window.onKey&&onKey(e.code,true,e))e.preventDefault()});
 addEventListener('keyup',e=>{keys[e.code]=false;if(window.onKey)onKey(e.code,false,e)});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 document.addEventListener('contextmenu',e=>e.preventDefault());
