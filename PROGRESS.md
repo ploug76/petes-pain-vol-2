@@ -12,3 +12,4 @@ Spank the Monkey (-> Bonk the Raccoons), HORSE (match first object hit + beat sc
   Next: full mode playtest script /workspace/pp2-work/qa.py, gamepad mock, tune, then create GH repo + Pages.
 - 09:46 (resumed after box interruption) GH repo created (public); WIP pushed to `wip` branch. Fixes since: HUD relayout, call sizing/suppression, fragile->pier + gentler dmg, mime throwAssist, 2 substeps for ragdoll, real unlock thresholds, high-flight zoom-out. tour.py: 0 errors both orientations, fps 60.5, mock gamepad OK.
   Next: qa.py port/land + mime test, push main, enable Pages, cover gif, vault.json entry + arcade sw v92.
+- 10:05 QA pass: qa.py all 9 modes to result, portrait+landscape, 0 errors, no NaN/runaway; ragdoll maxJ 0.05-0.43 m (was 0.56); mime throw-assist breaks pane; fragile delivers. Pushing main + enabling Pages.
