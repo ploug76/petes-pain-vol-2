@@ -13,3 +13,5 @@ Spank the Monkey (-> Bonk the Raccoons), HORSE (match first object hit + beat sc
 - 09:46 (resumed after box interruption) GH repo created (public); WIP pushed to `wip` branch. Fixes since: HUD relayout, call sizing/suppression, fragile->pier + gentler dmg, mime throwAssist, 2 substeps for ragdoll, real unlock thresholds, high-flight zoom-out. tour.py: 0 errors both orientations, fps 60.5, mock gamepad OK.
   Next: qa.py port/land + mime test, push main, enable Pages, cover gif, vault.json entry + arcade sw v92.
 - 10:05 QA pass: qa.py all 9 modes to result, portrait+landscape, 0 errors, no NaN/runaway; ragdoll maxJ 0.05-0.43 m (was 0.56); mime throw-assist breaks pane; fragile delivers. Pushing main + enabling Pages.
+- 10:20 LIVE: https://ploug76.github.io/petes-pain-vol-2/ (Pages from main, sw petes-pain-vol-2-v2 live). Live Playwright 412x915 + 915x412: 0 errors, sw registered.
+  Arcade: peters-arcade ee26457 adds vault.json entry + covers/petes-pain-vol-2.gif (720x378, 16 frames), sw v92 (live). Vault list verified live; absent from ?sample=bhs; not on kellys-arcade. No lb (pink-taco pattern). DONE.
